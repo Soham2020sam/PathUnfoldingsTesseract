@@ -1,27 +1,9 @@
 #include<bits/stdc++.h>
 using namespace std;
-ofstream output("check.txt");
+ofstream output("res.txt");
 vector<vector<int> > allPosPaths;
 vector<vector<string> > stringPath;
-int dx[] = {1, 0, 1};
-int dy[] = {0, 1, 1};
-string verticesTesseract[] = {"ABCD", "ABba", "BCcb", "DCcd", "abcd", "ADda", "EFGH", "EFfe", "FGgf", "HGgh", "efgh", "EHhe", "BCGF", "BbfF", "ABFE", "EHDA", "AEea", "abfe", "adhe", "DHhd", "cdhg", "gfbc", "CGgc", "CDHG"};
-map<string, int> vertices;
 set<vector<string> > correctPaths;
-bool face(string x){
-    for(int i = 0; i < 4; i++){
-        if(vertices[x.substr(i) + x.substr(0, i)] != 0){
-            return true;
-        }
-    }
-    reverse(x.begin(), x.end());
-    for(int i = 0; i < 4; i++){
-        if(vertices[x.substr(i) + x.substr(0, i)] != 0){
-            return true;
-        }
-    }
-    return false;
-}
 bool moveable(string a, string b){
     int val = 0;
     for(int i = 0; i < 4; i++){
@@ -73,10 +55,10 @@ void formPaths(){
         if(works){
             allPosPaths.push_back(order);
         }
-    } while(next_permutation(order.begin() + 1, order.end()));
+    } while(next_permutation(order.begin(), order.end()));
 }
 void PathToString(){
-    // output << allPosPaths.size() << "\n";
+    output << allPosPaths.size() << "\n";
     for(vector<int> x : allPosPaths){
         string first[6];
         first[0] = "ABCD";
@@ -128,7 +110,7 @@ void PathToString(){
             else{
                 currents.push_back(second[x[i] - 6]);
             }
-            if(x[i] % 6 == x[(i + 1) % 12] % 6){
+            if(x[i] % 6 == x[(i + 1) % 12] % 6 || i == 11){
                 currents.push_back("");
                 // cout << "HRER\n";
             }
@@ -153,6 +135,7 @@ void PathToString(){
         for(int i = 0; i < 24; i++){
             if((int)currents[i].size() != 4){
                 idx.push_back(i);
+                assert(i % 2 == 1);
             }
         }
         // cout << idx.size() << " " << rem.size() << "\n";
@@ -161,7 +144,7 @@ void PathToString(){
             vector<string> cur = currents;
             bool works = true;
             for(int j =0 ; j < idx.size(); j++){
-                if(moveable(currents[idx[j] - 1], rem[j]) && moveable(rem[j], currents[(idx[j] + 1) % 24])){
+                if(moveable(currents[idx[j] - 1], rem[j]) && (idx[j] == 23 || moveable(rem[j], currents[(idx[j] + 1) % 24]))){
                     cur[idx[j]] = rem[j];
                 }
                 else{
@@ -179,21 +162,284 @@ void PathToString(){
     }
 }
 void stringToConfig(){
+    cout << stringPath.size() << "\n";
     for(vector<string> path : stringPath){
-        for(int g = 0; g < 24; g++){
-            map<pair<int, char>, int> mp;
-            for(string x : verticesTesseract){
-                vertices[x]++;
+        vector<string> path3;
+        for(int i = 0; i < 24; i++){
+            path3.push_back(path[i]);
+        }
+        bool thingy = true;
+        for(int i = 0; i < 24 ;i++){
+            if(!moveable(path3[i], path3[(i + 1) % 24])){
+                thingy = false;
+                break;
             }
-            bool works = true;
-            for(int i = 0; i < 24; i++){
-                // output << path[i].size() << "\n";
-                if(!face(path[i])){
-                    works = false;
-                    break;
+        }
+        if(thingy){
+            for(int g = 0; g < 24; g++){
+                vector<string> path2(24);
+                map<pair<int, char>, int> mp;
+                bool works = true;
+                for(int i = 0; i < 24; i++){
+                    path2[i] = path3[i];
+                    for(int j = 0; j < 4; j++){
+                        mp[make_pair(i, path3[i][j])]++;
+                    }
                 }
+                map<pair<int, int>, int> coordinatesVal;
+                set<pair<pair<int, int>, char> > coordinates;
+                int curx = 0;
+                int cury = 0;
+                coordinates.insert(make_pair(make_pair(curx, cury), ' '));
+                coordinatesVal[make_pair(curx + 1, cury + 1)]++;
+                coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path2[0][3]));
+                coordinatesVal[make_pair(curx + 1, cury + 2)]++;
+                coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path2[0][0]));
+                coordinatesVal[make_pair(curx + 2, cury + 1)]++;
+                coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path2[0][2]));
+                coordinatesVal[make_pair(curx + 2, cury + 2)]++;
+                coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path2[0][1]));
+                coordinates.insert(make_pair(make_pair(curx + 1, cury), '-'));
+                coordinates.insert(make_pair(make_pair(curx + 2, cury), '-'));
+                coordinates.insert(make_pair(make_pair(curx + 3, cury), ' '));
+                coordinates.insert(make_pair(make_pair(curx, cury + 1), '|'));
+                coordinates.insert(make_pair(make_pair(curx, cury + 2), '|'));
+                coordinates.insert(make_pair(make_pair(curx, cury + 3), ' '));
+                coordinates.insert(make_pair(make_pair(curx + 3, cury + 1), '|'));
+                coordinates.insert(make_pair(make_pair(curx + 3, cury + 2), '|'));
+                coordinates.insert(make_pair(make_pair(curx + 3, cury + 3), ' '));
+                coordinates.insert(make_pair(make_pair(curx + 1, cury + 3), '-'));
+                coordinates.insert(make_pair(make_pair(curx + 2, cury + 3), '-'));
+                for(int i = 1; i < 24; i++){
+                    int idx = -1;
+                    for(int j = 0; j < 4; j++){
+                        if(mp[make_pair(i, path2[i - 1][j])] == 1 && mp[make_pair(i, path2[i - 1][(j + 1) % 4])] == 1){
+                            idx = j;
+                            break;
+                        }
+                    }
+                    if(idx == 0){
+                        vector<string> x = possible(path2[i]);
+                        for(string y : x){
+                            if(y[3] == path2[i - 1][idx] && y[2] == path2[i - 1][(idx + 1) % 4]){
+                                path2[i] = y;
+                            }
+                        }
+                        cury += 4;
+                        coordinates.insert(make_pair(make_pair(curx, cury), ' '));
+                        if(coordinatesVal.find(make_pair(curx + 1, cury + 1)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 1, cury + 1)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path2[i][3]));
+                        if(coordinatesVal.find(make_pair(curx + 1, cury + 2)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 1, cury + 2)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path2[i][0]));
+                        if(coordinatesVal.find(make_pair(curx + 2, cury + 1)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 2, cury + 1)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path2[i][2]));
+                        if(coordinatesVal.find(make_pair(curx + 2, cury + 2)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 2, cury + 2)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path2[i][1]));
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury), '-'));
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury), '-'));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury), ' '));
+                        coordinates.insert(make_pair(make_pair(curx, cury + 1), '|'));
+                        coordinates.insert(make_pair(make_pair(curx, cury + 2), '|'));
+                        coordinates.insert(make_pair(make_pair(curx, cury + 3), ' '));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury + 1), '|'));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury + 2), '|'));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury + 3), ' '));
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury + 3), '-'));
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury + 3), '-'));
+                    }
+                    else if(idx == 1){
+                        vector<string> x = possible(path2[i]);
+                        for(string y : x){
+                            if(y[0] == path2[i - 1][idx] && y[3] == path2[i - 1][(idx + 1) % 4]){
+                                path2[i] = y;
+                            }
+                        }
+                        curx += 4;
+                        coordinates.insert(make_pair(make_pair(curx, cury), ' '));
+                        if(coordinatesVal[make_pair(curx + 1, cury + 1)]){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 1, cury + 1)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path2[i][3]));
+                        if(coordinatesVal.find(make_pair(curx + 1, cury + 2)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 1, cury + 2)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path2[i][0]));
+                        if(coordinatesVal.find(make_pair(curx + 2, cury + 1)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 2, cury + 1)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path2[i][2]));
+                        if(coordinatesVal.find(make_pair(curx + 2, cury + 2)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 2, cury + 2)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path2[i][1]));
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury), '-'));
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury), '-'));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury), ' '));
+                        coordinates.insert(make_pair(make_pair(curx, cury + 1), '|'));
+                        coordinates.insert(make_pair(make_pair(curx, cury + 2), '|'));
+                        coordinates.insert(make_pair(make_pair(curx, cury + 3), ' '));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury + 1), '|'));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury + 2), '|'));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury + 3), ' '));
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury + 3), '-'));
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury + 3), '-'));
+                    }
+                    else if(idx == 2){
+                        vector<string> x = possible(path2[i]);
+                        for(string y : x){
+                            if(y[1] == path2[i - 1][idx] && y[0] == path2[i - 1][(idx + 1) % 4]){
+                                path2[i] = y;
+                            }
+                        }
+                        cury -= 4;
+                        coordinates.insert(make_pair(make_pair(curx, cury), ' '));
+                        if(coordinatesVal.find(make_pair(curx + 1, cury + 1)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 1, cury + 1)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path2[i][3]));
+                        if(coordinatesVal.find(make_pair(curx + 1, cury + 2)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 1, cury + 2)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path2[i][0]));
+                        if(coordinatesVal.find(make_pair(curx + 2, cury + 1)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 2, cury + 1)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path2[i][2]));
+                        if(coordinatesVal.find(make_pair(curx + 2, cury + 2)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 2, cury + 2)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path2[i][1]));
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury), '-'));
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury), '-'));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury), ' '));
+                        coordinates.insert(make_pair(make_pair(curx, cury + 1), '|'));
+                        coordinates.insert(make_pair(make_pair(curx, cury + 2), '|'));
+                        coordinates.insert(make_pair(make_pair(curx, cury + 3), ' '));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury + 1), '|'));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury + 2), '|'));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury + 3), ' '));
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury + 3), '-'));
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury + 3), '-'));
+                    }
+                    else{
+                        vector<string> x = possible(path2[i]);
+                        for(string y : x){
+                            if(y[2] == path2[i - 1][idx] && y[1] == path2[i - 1][(idx + 1) % 4]){
+                                path2[i] = y;
+                            }
+                        }
+                        curx -= 4;
+                        coordinates.insert(make_pair(make_pair(curx, cury), ' '));
+                        if(coordinatesVal.find(make_pair(curx + 1, cury + 1)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 1, cury + 1)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path2[i][3]));
+                        if(coordinatesVal.find(make_pair(curx + 1, cury + 2)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 1, cury + 2)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path2[i][0]));
+                        if(coordinatesVal.find(make_pair(curx + 2, cury + 1)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 2, cury + 1)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path2[i][2]));
+                        if(coordinatesVal.find(make_pair(curx + 2, cury + 2)) != coordinatesVal.end()){
+                            works = false;
+                            // output << "There is a overlap at " << path2[i] << "\n";
+                            break;
+                        }
+                        coordinatesVal[make_pair(curx + 2, cury + 2)]++;
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path2[i][1]));
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury), '-'));
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury), '-'));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury), ' '));
+                        coordinates.insert(make_pair(make_pair(curx, cury + 1), '|'));
+                        coordinates.insert(make_pair(make_pair(curx, cury + 2), '|'));
+                        coordinates.insert(make_pair(make_pair(curx, cury + 3), ' '));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury + 1), '|'));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury + 2), '|'));
+                        coordinates.insert(make_pair(make_pair(curx + 3, cury + 3), ' '));
+                        coordinates.insert(make_pair(make_pair(curx + 1, cury + 3), '-'));
+                        coordinates.insert(make_pair(make_pair(curx + 2, cury + 3), '-'));
+                    }
+                }
+                if(works){
+                    if(correctPaths.find(path3) == correctPaths.end()){
+                        output << "The following path works!\n";
+                        for(string s : path3){
+                            output << s << "\n";
+                        }
+                        output << "\n";
+                        output << "-------------------------------------------------------\n";
+                        output << "\n";
+                        correctPaths.insert(path3);
+                    }
+                }
+                path3.push_back(path3[0]);
+                path3.erase(path3.begin());
+            }
+        }
+        else{
+            // cout << "HERE\n";
+            map<pair<int, char>, int> mp;
+            bool works = true;
+            vector<string> path2(24);
+            for(int i = 0; i < 24; i++){
+                path2[i] = path3[i];
                 for(int j = 0; j < 4; j++){
-                    mp[make_pair(i, path[i][j])]++;
+                    mp[make_pair(i, path2[i][j])]++;
                 }
             }
             map<pair<int, int>, int> coordinatesVal;
@@ -202,13 +448,13 @@ void stringToConfig(){
             int cury = 0;
             coordinates.insert(make_pair(make_pair(curx, cury), ' '));
             coordinatesVal[make_pair(curx + 1, cury + 1)]++;
-            coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path[0][3]));
+            coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path2[0][3]));
             coordinatesVal[make_pair(curx + 1, cury + 2)]++;
-            coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path[0][0]));
+            coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path2[0][0]));
             coordinatesVal[make_pair(curx + 2, cury + 1)]++;
-            coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path[0][2]));
+            coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path2[0][2]));
             coordinatesVal[make_pair(curx + 2, cury + 2)]++;
-            coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path[0][1]));
+            coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path2[0][1]));
             coordinates.insert(make_pair(make_pair(curx + 1, cury), '-'));
             coordinates.insert(make_pair(make_pair(curx + 2, cury), '-'));
             coordinates.insert(make_pair(make_pair(curx + 3, cury), ' '));
@@ -223,44 +469,48 @@ void stringToConfig(){
             for(int i = 1; i < 24; i++){
                 int idx = -1;
                 for(int j = 0; j < 4; j++){
-                    if(mp[make_pair(i, path[i - 1][j])] == 1 && mp[make_pair(i, path[i - 1][(j + 1) % 4])] == 1){
+                    if(mp[make_pair(i, path2[i - 1][j])] == 1 && mp[make_pair(i, path2[i - 1][(j + 1) % 4])] == 1){
                         idx = j;
                         break;
                     }
                 }
                 if(idx == 0){
-                    vector<string> x = possible(path[i]);
+                    vector<string> x = possible(path2[i]);
                     for(string y : x){
-                        if(y[3] == path[i - 1][idx] && y[2] == path[i - 1][(idx + 1) % 4]){
-                            path[i] = y;
+                        if(y[3] == path2[i - 1][idx] && y[2] == path2[i - 1][(idx + 1) % 4]){
+                            path2[i] = y;
                         }
                     }
                     cury += 4;
                     coordinates.insert(make_pair(make_pair(curx, cury), ' '));
-                    if(coordinatesVal[make_pair(curx + 1, cury + 1)]){
+                    if(coordinatesVal.find(make_pair(curx + 1, cury + 1)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 1, cury + 1)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path[i][3]));
-                    if(coordinatesVal[make_pair(curx + 1, cury + 2)]){
-                        output << "There is a overlap at " << path[i] << "\n";
+                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path2[i][3]));
+                    if(coordinatesVal.find(make_pair(curx + 1, cury + 2)) != coordinatesVal.end()){
+                        works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 1, cury + 2)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path[i][0]));
-                    if(coordinatesVal[make_pair(curx + 2, cury + 1)]){
+                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path2[i][0]));
+                    if(coordinatesVal.find(make_pair(curx + 2, cury + 1)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 2, cury + 1)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path[i][2]));
-                    if(coordinatesVal[make_pair(curx + 2, cury + 2)]){
+                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path2[i][2]));
+                    if(coordinatesVal.find(make_pair(curx + 2, cury + 2)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 2, cury + 2)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path[i][1]));
+                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path2[i][1]));
                     coordinates.insert(make_pair(make_pair(curx + 1, cury), '-'));
                     coordinates.insert(make_pair(make_pair(curx + 2, cury), '-'));
                     coordinates.insert(make_pair(make_pair(curx + 3, cury), ' '));
@@ -274,38 +524,42 @@ void stringToConfig(){
                     coordinates.insert(make_pair(make_pair(curx + 2, cury + 3), '-'));
                 }
                 else if(idx == 1){
-                    vector<string> x = possible(path[i]);
+                    vector<string> x = possible(path2[i]);
                     for(string y : x){
-                        if(y[0] == path[i - 1][idx] && y[3] == path[i - 1][(idx + 1) % 4]){
-                            path[i] = y;
+                        if(y[0] == path2[i - 1][idx] && y[3] == path2[i - 1][(idx + 1) % 4]){
+                            path2[i] = y;
                         }
                     }
                     curx += 4;
                     coordinates.insert(make_pair(make_pair(curx, cury), ' '));
                     if(coordinatesVal[make_pair(curx + 1, cury + 1)]){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 1, cury + 1)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path[i][3]));
-                    if(coordinatesVal[make_pair(curx + 1, cury + 2)]){
+                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path2[i][3]));
+                    if(coordinatesVal.find(make_pair(curx + 1, cury + 2)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 1, cury + 2)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path[i][0]));
-                    if(coordinatesVal[make_pair(curx + 2, cury + 1)]){
+                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path2[i][0]));
+                    if(coordinatesVal.find(make_pair(curx + 2, cury + 1)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 2, cury + 1)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path[i][2]));
-                    if(coordinatesVal[make_pair(curx + 2, cury + 2)]){
+                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path2[i][2]));
+                    if(coordinatesVal.find(make_pair(curx + 2, cury + 2)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 2, cury + 2)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path[i][1]));
+                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path2[i][1]));
                     coordinates.insert(make_pair(make_pair(curx + 1, cury), '-'));
                     coordinates.insert(make_pair(make_pair(curx + 2, cury), '-'));
                     coordinates.insert(make_pair(make_pair(curx + 3, cury), ' '));
@@ -319,38 +573,42 @@ void stringToConfig(){
                     coordinates.insert(make_pair(make_pair(curx + 2, cury + 3), '-'));
                 }
                 else if(idx == 2){
-                    vector<string> x = possible(path[i]);
+                    vector<string> x = possible(path2[i]);
                     for(string y : x){
-                        if(y[1] == path[i - 1][idx] && y[0] == path[i - 1][(idx + 1) % 4]){
-                            path[i] = y;
+                        if(y[1] == path2[i - 1][idx] && y[0] == path2[i - 1][(idx + 1) % 4]){
+                            path2[i] = y;
                         }
                     }
                     cury -= 4;
                     coordinates.insert(make_pair(make_pair(curx, cury), ' '));
-                    if(coordinatesVal[make_pair(curx + 1, cury + 1)]){
+                    if(coordinatesVal.find(make_pair(curx + 1, cury + 1)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 1, cury + 1)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path[i][3]));
-                    if(coordinatesVal[make_pair(curx + 1, cury + 2)]){
+                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path2[i][3]));
+                    if(coordinatesVal.find(make_pair(curx + 1, cury + 2)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 1, cury + 2)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path[i][0]));
-                    if(coordinatesVal[make_pair(curx + 2, cury + 1)]){
+                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path2[i][0]));
+                    if(coordinatesVal.find(make_pair(curx + 2, cury + 1)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 2, cury + 1)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path[i][2]));
-                    if(coordinatesVal[make_pair(curx + 2, cury + 2)]){
+                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path2[i][2]));
+                    if(coordinatesVal.find(make_pair(curx + 2, cury + 2)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 2, cury + 2)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path[i][1]));
+                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path2[i][1]));
                     coordinates.insert(make_pair(make_pair(curx + 1, cury), '-'));
                     coordinates.insert(make_pair(make_pair(curx + 2, cury), '-'));
                     coordinates.insert(make_pair(make_pair(curx + 3, cury), ' '));
@@ -364,38 +622,42 @@ void stringToConfig(){
                     coordinates.insert(make_pair(make_pair(curx + 2, cury + 3), '-'));
                 }
                 else{
-                    vector<string> x = possible(path[i]);
+                    vector<string> x = possible(path2[i]);
                     for(string y : x){
-                        if(y[2] == path[i - 1][idx] && y[1] == path[i - 1][(idx + 1) % 4]){
-                            path[i] = y;
+                        if(y[2] == path2[i - 1][idx] && y[1] == path2[i - 1][(idx + 1) % 4]){
+                            path2[i] = y;
                         }
                     }
                     curx -= 4;
                     coordinates.insert(make_pair(make_pair(curx, cury), ' '));
-                    if(coordinatesVal[make_pair(curx + 1, cury + 1)]){
+                    if(coordinatesVal.find(make_pair(curx + 1, cury + 1)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 1, cury + 1)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path[i][3]));
-                    if(coordinatesVal[make_pair(curx + 1, cury + 2)]){
+                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 1), path2[i][3]));
+                    if(coordinatesVal.find(make_pair(curx + 1, cury + 2)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 1, cury + 2)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path[i][0]));
-                    if(coordinatesVal[make_pair(curx + 2, cury + 1)]){
+                    coordinates.insert(make_pair(make_pair(curx + 1, cury + 2), path2[i][0]));
+                    if(coordinatesVal.find(make_pair(curx + 2, cury + 1)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 2, cury + 1)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path[i][2]));
-                    if(coordinatesVal[make_pair(curx + 2, cury + 2)]){
+                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 1), path2[i][2]));
+                    if(coordinatesVal.find(make_pair(curx + 2, cury + 2)) != coordinatesVal.end()){
                         works = false;
+                        // output << "There is a overlap at " << path2[i] << "\n";
                         break;
                     }
                     coordinatesVal[make_pair(curx + 2, cury + 2)]++;
-                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path[i][1]));
+                    coordinates.insert(make_pair(make_pair(curx + 2, cury + 2), path2[i][1]));
                     coordinates.insert(make_pair(make_pair(curx + 1, cury), '-'));
                     coordinates.insert(make_pair(make_pair(curx + 2, cury), '-'));
                     coordinates.insert(make_pair(make_pair(curx + 3, cury), ' '));
@@ -410,18 +672,17 @@ void stringToConfig(){
                 }
             }
             if(works){
-                if(correctPaths.find(path) == correctPaths.end()){
+                if(correctPaths.find(path3) == correctPaths.end()){
                     output << "The following path works!\n";
-                    for(string s : path){
+                    for(string s : path3){
                         output << s << "\n";
                     }
                     output << "\n";
                     output << "-------------------------------------------------------\n";
                     output << "\n";
-                    correctPaths.insert(path);
+                    correctPaths.insert(path3);
                 }
             }
-            rotate(path.begin(), path.begin() + 1, path.end());
         }
     }
 }
